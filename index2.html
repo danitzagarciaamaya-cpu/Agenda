@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #1e90ff, #00bfff, #87cefa);
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #004aad;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 1.5em;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      padding: 25px;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .tab {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    .tab:hover {
+      background: #0056b3;
+    }
+    .content {
+      display: none;
+    }
+    .active {
+      display: block;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #218838;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      background: #f4f4f4;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    li.done {
+      text-decoration: line-through;
+      color: gray;
+      background: #e0e0e0;
+    }
+    .quote {
+      text-align: center;
+      margin-bottom: 20px;
+      font-style: italic;
+      color: #004aad;
+    }
+  </style>
+</head>
+<body>
+  <header>Bienvenido a tu Agenda</header>
+  <div class="quote" id="quote"></div>
+
+  <div class="container">
+    <div class="tabs">
+      <div class="tab" onclick="showTab('clientes')">Clientes</div>
+      <div class="tab" onclick="showTab('gastos')">Gastos</div>
+      <div class="tab" onclick="showTab('pagos')">Pagos</div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div id="clientes" class="content active">
+      <h2>Registro de Cliente</h2>
+      <div class="form-group"><label>Nombre:</label><input type="text" id="nombre"></div>
+      <div class="form-group"><label>Servicio:</label><input type="text" id="servicio"></div>
+      <div class="form-group"><label>Tipo de Máquina:</label><input type="text" id="maquina"></div>
+      <div class="form-group"><label>Precio:</label><input type="number" id="precio"></div>
+      <div class="form-group"><label>Accesorios:</label><input type="text" id="accesorios"></div>
+      <div class="form-group"><label>Lugar:</label><input type="text" id="lugar"></div>
+      <div class="form-group"><label>Observaciones:</label><textarea id="observaciones"></textarea></div>
+      <button onclick="guardarCliente()">Guardar Cliente</button>
+      <button onclick="descargarPDF()">Descargar PDF</button>
+      <ul id="listaClientes"></ul>
+    </div>
+
+    <!-- GASTOS -->
+    <div id="gastos" class="content">
+      <h2>Gastos</h2>
+      <div class="form-group"><label>Tipo:</label>
+        <select id="tipoGasto">
+          <option>Servicios</option>
+          <option>Personales</option>
+          <option>Pagos a terceros</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Descripción:</label><input type="text" id="descripcionGasto"></div>
+      <div class="form-group"><label>Fecha de inicio:</label><input type="date" id="inicioGasto"></div>
+      <div class="form-group"><label>Fecha final:</label><input type="date" id="finGasto"></div>
+      <button onclick="agregarGasto()">Agregar</button>
+      <ul id="listaGastos"></ul>
+    </div>
+
+    <!-- PAGOS -->
+    <div id="pagos" class="content">
+      <h2>Pagos</h2>
+      <div class="form-group"><label>Pago a:</label><input type="text" id="pagoA"></div>
+      <div class="form-group"><label>Monto:</label><input type="number" id="montoPago"></div>
+      <div class="form-group"><label>Detalle:</label><input type="text" id="detallePago"></div>
+      <div class="form-group"><label>Fecha:</label><input type="date" id="fechaPago"></div>
+      <button onclick="agregarPago()">Agregar</button>
+      <ul id="listaPagos"></ul>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    // Frases motivadoras
+    const frases = [
+      "Cada día es una nueva oportunidad para mejorar.",
+      "Hazlo con pasión o no lo hagas.",
+      "Tu esfuerzo de hoy será tu orgullo de mañana.",
+      "Nada es imposible si crees en ti."
+    ];
+    document.getElementById("quote").innerText = frases[Math.floor(Math.random()*frases.length)];
+
+    function showTab(tab) {
+      document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+    }
+
+    function guardarCliente() {
+      const nombre = document.getElementById("nombre").value;
+      const servicio = document.getElementById("servicio").value;
+      const maquina = document.getElementById("maquina").value;
+      const precio = document.getElementById("precio").value;
+      const accesorios = document.getElementById("accesorios").value;
+      const lugar = document.getElementById("lugar").value;
+      const obs = document.getElementById("observaciones").value;
+
+      if(!nombre) return alert("Agrega un nombre de cliente.");
+
+      const li = document.createElement("li");
+      li.textContent = `${nombre} - ${servicio} - ${maquina} - S/${precio} - ${accesorios} - ${lugar} - ${obs}`;
+      document.getElementById("listaClientes").appendChild(li);
+
+      document.querySelectorAll("#clientes input, #clientes textarea").forEach(el => el.value = "");
+    }
+
+    function descargarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("Registro de Clientes", 10, 10);
+      let y = 20;
+      document.querySelectorAll("#listaClientes li").forEach((li) => {
+        doc.text(li.textContent, 10, y);
+        y += 10;
+      });
+      doc.save("clientes.pdf");
+    }
+
+    function agregarGasto() {
+      const tipo = document.getElementById("tipoGasto").value;
+      const desc = document.getElementById("descripcionGasto").value;
+      const ini = document.getElementById("inicioGasto").value;
+      const fin = document.getElementById("finGasto").value;
+      const li = document.createElement("li");
+      li.innerHTML = `${tipo}: ${desc} (Inicio: ${ini} - Fin: ${fin}) <input type='checkbox' onclick='toggleDone(this)'>`;
+      document.getElementById("listaGastos").appendChild(li);
+      document.querySelectorAll("#gastos input").forEach(el => el.value = "");
+    }
+
+    function agregarPago() {
+      const pagoA = document.getElementById("pagoA").value;
+      const monto = document.getElementById("montoPago").value;
+      const detalle = document.getElementById("detallePago").value;
+      const fecha = document.getElementById("fechaPago").value;
+      const li = document.createElement("li");
+      li.innerHTML = `${pagoA} - S/${monto} - ${detalle} - ${fecha} <input type='checkbox' onclick='toggleDone(this)'>`;
+      document.getElementById("listaPagos").appendChild(li);
+      document.querySelectorAll("#pagos input").forEach(el => el.value = "");
+    }
+
+    function toggleDone(cb) {
+      cb.parentElement.classList.toggle("done");
+    }
+  </script>
+</body>
+</html>
